@@ -1,5 +1,5 @@
 {
-  "name": "reason-to-do",
+  "name": "reason-todo-app",
   "scripts": {
     "start": "bsb -make-world -w",
     "js": "bsb -make-world",
@@ -9,7 +9,9 @@
   "dependencies": {
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
-    "reason-react": "0.2.4"
+    "reason-react": "0.2.4",
+    "todomvc-app-css": "^2.1.0",
+    "todomvc-common": "^1.0.4"
   },
   "devDependencies": {
     "bs-platform": "^2.0.0",
