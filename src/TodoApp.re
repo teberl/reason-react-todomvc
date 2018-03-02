@@ -8,7 +8,7 @@ let str = ReasonReact.stringToElement;
 
 module TodoItem = {
   let component = ReasonReact.statelessComponent("TodoItem");
-  let make = (~item, ~onToggle, _children) => {
+  let make = (~item, ~onToggle, ~onDestroy, _children) => {
     ...component,
     render: (_self) => {
       let className = 
@@ -23,7 +23,10 @@ module TodoItem = {
             checked=(Js.Boolean.to_js_boolean(item.completed))
           />
           <label> (str(item.title)) </label>
-          <button className="destroy" />
+          <button 
+            className="destroy"
+            onClick=((_evt) => onDestroy())
+          />
         </div>
       </li>  
     }
@@ -65,7 +68,9 @@ type state = {items: list(item)};
 
 type action =
   | AddItem(string)
-  | ToggleItem(int);
+  | DestroyItem(int)
+  | ToggleItem(int)
+  | ClearCompletedItems;
 
 let component = ReasonReact.reducerComponent("TodoApp");
 
@@ -82,13 +87,22 @@ let make = (_children) => {
   reducer: (action, {items}) =>
     switch action {
     | AddItem(text) => ReasonReact.Update({items: [newItem(text), ...items]})
+    | DestroyItem(id) => 
+      let items =
+        List.filter((item) => item.id !== id, items);
+      ReasonReact.Update({items: items})
     | ToggleItem(id) =>
       let items =
         List.map((item) => item.id === id ? {...item, completed: ! item.completed} : item, items);
       ReasonReact.Update({items: items})
+    | ClearCompletedItems => 
+      let items =
+        List.filter((item) => item.completed === false, items);
+      ReasonReact.Update({items: items})
     },
   render: ({state: {items}, reduce}) => {
     let incompleteItemsCount = List.length(List.filter((item) => item.completed === false, items));
+    let completeItemsCount = List.length(List.filter((item) => item.completed === true, items));
     let getIncompleteItemsStr = (completedItemsCount) =>
       str(completedItemsCount === 1 ? " item left" : " items left");
     <section className="todoapp">
@@ -105,6 +119,7 @@ let make = (_children) => {
                   (item) =>
                     <TodoItem
                       key=(string_of_int(item.id))
+                      onDestroy=(reduce(() => DestroyItem(item.id)))
                       onToggle=(reduce(() => ToggleItem(item.id)))
                       item
                     />,
@@ -120,6 +135,16 @@ let make = (_children) => {
           <strong> (str(string_of_int(incompleteItemsCount))) </strong>
           (getIncompleteItemsStr(incompleteItemsCount))
         </span>
+        (
+          completeItemsCount > 0 
+            ? <button
+                className="clear-completed"
+                onClick=(reduce((_evt) => ClearCompletedItems))
+                >
+                (str("Clear completed"))
+              </button>
+            : ReasonReact.nullElement
+        )
       </div>
     </section>
   }
